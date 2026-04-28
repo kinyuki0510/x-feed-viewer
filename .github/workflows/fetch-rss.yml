@@ -27,6 +27,10 @@ permissions:
 jobs:
   fetch:
     runs-on: ubuntu-latest
+    # aws-actions/configure-aws-credentials@v4 は Node.js 20 ベースのため、
+    # Node.js 24 への移行完了まで明示的にオプトインする
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Configure AWS credentials via OIDC
