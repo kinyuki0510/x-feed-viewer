@@ -1,0 +1,6 @@
+{
+  accounts: [
+    { username: official_clpc, display_name: CLPC },
+    { username: anthropic,     display_name: Anthropic }
+  ]
+}

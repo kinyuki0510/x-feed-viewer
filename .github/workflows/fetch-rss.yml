@@ -1,0 +1,69 @@
+# fetch-rss.yml — nitter.net から RSS を取得して S3 に保存するワークフロー
+#
+# 実行タイミング:
+#   - 6時間ごとの定期実行（UTC 0/6/12/18 時）
+#   - Actions タブから手動実行も可能（workflow_dispatch）
+#
+# 認証:
+#   - GitHub OIDC を使用（アクセスキー不使用）
+#   - AWS_ROLE_ARN に Terraform で作成した IAM ロールの ARN を設定する
+#
+# 必要な GitHub Secrets:
+#   - AWS_ROLE_ARN : Terraform output の github_actions_role_arn
+#   - S3_BUCKET    : Terraform output の app_bucket_name
+
+name: Fetch RSS Feeds
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+# OIDC トークン発行に必要なパーミッション
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-1
+
+      - name: Fetch RSS feeds and upload to S3
+        env:
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+        run: |
+          set -euo pipefail
+
+          # accounts.json を S3 から取得してユーザー名一覧を展開
+          ACCOUNTS=$(aws s3 cp "s3://${S3_BUCKET}/accounts.json" - \
+            | jq -r '.accounts[].username')
+
+          for USERNAME in ${ACCOUNTS}; do
+            echo "Fetching RSS for @${USERNAME}..."
+
+            # --fail により HTTP エラー時に終了コード != 0 となる
+            # User-Agent を設定して Bot 判定を回避する
+            FEED=$(curl -s --fail \
+              --max-time 30 \
+              -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+              "https://nitter.net/${USERNAME}/rss" || echo "")
+
+            # レスポンスが RSS XML であることを確認してから上書き保存
+            # nitter がエラーページ（HTML）を返した場合、既存の XML を破壊しない
+            if echo "${FEED}" | grep -q "<rss"; then
+              echo "${FEED}" | aws s3 cp - "s3://${S3_BUCKET}/feeds/${USERNAME}.xml" \
+                --content-type "application/rss+xml"
+              echo "  Saved: feeds/${USERNAME}.xml"
+            else
+              echo "  Warning: Invalid RSS response for @${USERNAME}, skipping."
+            fi
+          done
+
+          echo "Done."
