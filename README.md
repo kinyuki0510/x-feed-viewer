@@ -103,8 +103,8 @@ apply 完了後、以下の値が出力されます：
 ```json
 {
   "accounts": [
-    { "username": "official_clpc", "display_name": "CLPC" },
-    { "username": "anthropic",     "display_name": "Anthropic" }
+    { "username": "your_account1", "display_name": "表示名1" },
+    { "username": "your_account2", "display_name": "表示名2" }
   ]
 }
 ```

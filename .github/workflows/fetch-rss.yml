@@ -45,9 +45,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          # accounts.json を S3 から取得してユーザー名一覧を展開
-          ACCOUNTS=$(aws s3 cp "s3://${S3_BUCKET}/accounts.json" - \
-            | jq -r '.accounts[].username')
+          # accounts.json を S3 から取得（存在しない場合は明示的にエラー終了）
+          ACCOUNTS_JSON=$(aws s3 cp "s3://${S3_BUCKET}/accounts.json" - 2>/dev/null || true)
+          if [ -z "${ACCOUNTS_JSON}" ]; then
+            echo "Error: s3://${S3_BUCKET}/accounts.json が見つかりません。先にアップロードしてください。"
+            exit 1
+          fi
+          ACCOUNTS=$(echo "${ACCOUNTS_JSON}" | jq -r '.accounts[].username')
 
           for USERNAME in ${ACCOUNTS}; do
             echo "Fetching RSS for @${USERNAME}..."

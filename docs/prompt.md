@@ -62,6 +62,9 @@ s3://bucket-name/
 - `accounts.json` を読み込み、各アカウントの `feeds/{username}.xml` を取得・パース
 - 全アカウントのポストを時系列順（新しい順）にまとめて表示
 - アカウントごとのフィルタリング機能
+- 引用ポストは非表示（`<blockquote>` を除去）
+- 「元のポスト」リンクなし（本文をそのまま表示する方針のため）
+- nitterのHTML構造を保持して表示（`sanitizeHTML` で危険な要素のみ除去、Option B採用）
 - PWA対応: `manifest.json` と Service Worker を実装し、ホーム画面追加・オフライン対応
 
 ---

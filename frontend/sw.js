@@ -8,7 +8,7 @@
  * CACHE_VERSION を上げると次回アクセス時に古いキャッシュが削除される。
  */
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = `x-feed-viewer-${CACHE_VERSION}`;
 
 /** インストール時にキャッシュする静的アセット */

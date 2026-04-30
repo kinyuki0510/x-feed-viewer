@@ -123,21 +123,21 @@ function renderPosts() {
     const el = document.createElement('article');
     el.className = 'post';
 
-    // description には HTML が含まれることがある（nitter の CDATA）ため
-    // stripHTML でテキストのみ抽出して XSS を防ぐ
-    const text = stripHTML(post.description) || post.title;
-
-    // javascript: スキームを含むリンクはクリック時にスクリプトが実行されるため # に差し替える
-    const safeLink = isSafeUrl(post.link) ? escapeHtml(post.link) : '#';
-
-    el.innerHTML = `
-      <div class="post-meta">
-        <span class="username">@${escapeHtml(post.username)}</span>
-        <span class="date">${formatDate(post.pubDate)}</span>
-      </div>
-      <p class="post-text">${escapeHtml(text)}</p>
-      <a class="post-link" href="${safeLink}" target="_blank" rel="noopener noreferrer">元のポスト →</a>
+    // meta（ユーザー名・日付）は escapeHtml 済みの値のみ含むため template literal で構築
+    const meta = document.createElement('div');
+    meta.className = 'post-meta';
+    meta.innerHTML = `
+      <span class="username">@${escapeHtml(post.username)}</span>
+      <span class="date">${formatDate(post.pubDate)}</span>
     `;
+
+    // コンテンツは nitter の HTML 構造を保持しつつ sanitizeHTML で危険な要素を除去して挿入
+    const content = document.createElement('div');
+    content.className = 'post-content';
+    content.innerHTML = sanitizeHTML(post.description) || `<p>${escapeHtml(post.title)}</p>`;
+
+    el.appendChild(meta);
+    el.appendChild(content);
     fragment.appendChild(el);
   });
 
@@ -147,16 +147,41 @@ function renderPosts() {
 // ─── ユーティリティ ───────────────────────────────────────────────────────────
 
 /**
- * HTML タグを除去してプレーンテキストを返す。
- * innerHTML に代入することで jsdom / ブラウザのパーサーにサニタイズさせる。
+ * HTML を安全な状態にして返す（Option B: 構造を保持しつつ危険な要素・属性を除去）。
+ *
+ * 除去対象:
+ *   - <script> <style> <iframe> <object> <embed> <form>
+ *   - on* 属性（onerror, onclick など）
+ *   - href / src の javascript: スキーム
  *
  * @param {string} html
- * @returns {string}
+ * @returns {string} サニタイズ済み HTML 文字列
  */
-function stripHTML(html) {
+function sanitizeHTML(html) {
   const div = document.createElement('div');
   div.innerHTML = html;
-  return div.textContent || '';
+
+  // 危険な要素を削除。blockquote は引用ポストなので表示不要のため合わせて除去する
+  div.querySelectorAll('script, style, iframe, object, embed, form, blockquote').forEach(el => el.remove());
+
+  div.querySelectorAll('*').forEach(el => {
+    // on* 属性（イベントハンドラ）を削除
+    for (const attr of [...el.attributes]) {
+      if (attr.name.startsWith('on')) el.removeAttribute(attr.name);
+    }
+    // <a href> の javascript: スキームを無効化
+    if (el.tagName === 'A') {
+      if (!isSafeUrl(el.getAttribute('href') ?? '')) el.setAttribute('href', '#');
+      // _blank リンクは必ず noopener を付与
+      if (el.getAttribute('target') === '_blank') el.setAttribute('rel', 'noopener noreferrer');
+    }
+    // <img src> の javascript: スキームを無効化
+    if (el.tagName === 'IMG' && !isSafeUrl(el.getAttribute('src') ?? '')) {
+      el.removeAttribute('src');
+    }
+  });
+
+  return div.innerHTML;
 }
 
 /**

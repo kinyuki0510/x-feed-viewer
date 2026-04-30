@@ -87,10 +87,27 @@
     /* 日付は右端に寄せる */
     .date { color: #71767b; font-size: 12px; margin-left: auto; }
 
-    .post-text {
+    /* nitter の HTML をそのまま描画するコンテナ */
+    .post-content {
       line-height: 1.6;
       word-break: break-word;
       margin-bottom: 10px;
+    }
+    .post-content p { margin-bottom: 4px; }
+    .post-content img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-top: 8px;
+      display: block;
+    }
+    .post-content a { color: #1d9bf0; text-decoration: none; }
+    .post-content a:hover { text-decoration: underline; }
+    /* 引用ツイートのブロック */
+    .post-content blockquote {
+      border-left: 3px solid #2f3336;
+      margin: 8px 0 0 0;
+      padding: 8px 12px;
+      color: #71767b;
     }
 
     .post-link {

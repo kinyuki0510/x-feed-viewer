@@ -1,6 +1,6 @@
-{
-  accounts: [
-    { username: official_clpc, display_name: CLPC },
-    { username: anthropic,     display_name: Anthropic }
-  ]
-}
+  {
+    "accounts": [
+      { "username": "chukoseishimbun", "display_name": "読売中高生新聞" },
+      { "username": "official_clpc", "display_name": "CLPC" }
+    ]
+  }
