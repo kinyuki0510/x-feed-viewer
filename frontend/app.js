@@ -175,9 +175,11 @@ function sanitizeHTML(html) {
       // _blank リンクは必ず noopener を付与
       if (el.getAttribute('target') === '_blank') el.setAttribute('rel', 'noopener noreferrer');
     }
-    // <img src> の javascript: スキームを無効化
-    if (el.tagName === 'IMG' && !isSafeUrl(el.getAttribute('src') ?? '')) {
-      el.removeAttribute('src');
+    if (el.tagName === 'IMG') {
+      // Referer ヘッダーを送らないことで nitter.net の hotlink 制限を回避する
+      el.setAttribute('referrerpolicy', 'no-referrer');
+      // javascript: スキームを無効化
+      if (!isSafeUrl(el.getAttribute('src') ?? '')) el.removeAttribute('src');
     }
   });
 
