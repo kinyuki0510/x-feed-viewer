@@ -1,0 +1,10 @@
+{
+  "name": "X Feed Viewer",
+  "short_name": "X Feed",
+  "description": "nitter.net 経由で X のフィードを閲覧する PWA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "lang": "ja"
+}

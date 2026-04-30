@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X Feed Viewer</title>
+
+  <!-- PWA マニフェスト -->
+  <link rel="manifest" href="manifest.json">
+  <!-- iOS ホーム画面追加用（manifest の theme_color は iOS では効かない） -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="theme-color" content="#000000">
+
+  <style>
+    /* ── リセット ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── ベース ── */
+    body {
+      background: #000;
+      color: #e7e9ea;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100dvh;
+    }
+
+    /* ── ヘッダー ── */
+    header {
+      position: sticky;
+      top: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #2f3336;
+      padding: 14px 16px;
+      z-index: 10;
+    }
+    header h1 { font-size: 18px; font-weight: 700; }
+
+    /* ── フィルタバー ── */
+    #filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 12px 16px;
+      border-bottom: 1px solid #2f3336;
+      /* フィルタ数が多い場合にスクロール可能にする */
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    #filters::-webkit-scrollbar { display: none; }
+
+    .filter-btn {
+      background: transparent;
+      color: #71767b;
+      border: 1px solid #2f3336;
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .filter-btn:hover { color: #e7e9ea; border-color: #71767b; }
+    .filter-btn.active { color: #e7e9ea; border-color: #e7e9ea; font-weight: 600; }
+
+    /* ── ポスト一覧 ── */
+    #posts {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .post {
+      border-bottom: 1px solid #2f3336;
+      padding: 16px;
+      /* タップ時のハイライト */
+      transition: background 0.1s;
+    }
+    .post:hover { background: #080808; }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .username { color: #71767b; font-size: 13px; }
+    /* 日付は右端に寄せる */
+    .date { color: #71767b; font-size: 12px; margin-left: auto; }
+
+    /* nitter の HTML をそのまま描画するコンテナ */
+    .post-content {
+      line-height: 1.6;
+      word-break: break-word;
+      margin-bottom: 10px;
+    }
+    .post-content p { margin-bottom: 4px; }
+    .post-content img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-top: 8px;
+      display: block;
+    }
+    .post-content a { color: #1d9bf0; text-decoration: none; }
+    .post-content a:hover { text-decoration: underline; }
+    /* 引用ツイートのブロック */
+    .post-content blockquote {
+      border-left: 3px solid #2f3336;
+      margin: 8px 0 0 0;
+      padding: 8px 12px;
+      color: #71767b;
+    }
+
+    .post-link {
+      color: #1d9bf0;
+      font-size: 13px;
+      text-decoration: none;
+    }
+    .post-link:hover { text-decoration: underline; }
+
+    /* ── 状態表示 ── */
+    .loading, .empty, .error {
+      text-align: center;
+      padding: 64px 16px;
+      color: #71767b;
+    }
+    .error { color: #f4212e; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>X Feed Viewer</h1>
+  </header>
+
+  <!-- アカウントフィルタ（app.js が動的生成） -->
+  <nav id="filters" aria-label="アカウントフィルタ"></nav>
+
+  <!-- ポスト一覧（app.js が動的生成） -->
+  <main id="posts">
+    <p class="loading">読み込み中...</p>
+  </main>
+
+  <!--
+    type="module" を指定することで ES modules の import/export が使える。
+    defer 相当の動作になるので DOMContentLoaded を待つ必要があるが、
+    app.js 側で addEventListener('DOMContentLoaded', ...) で対応済み。
+  -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
